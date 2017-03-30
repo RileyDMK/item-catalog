@@ -2,7 +2,7 @@
 {% block content %}
 {% include "header.html" %}
 <div class="container">
-  <div class = 'flash'>
+  <div class="flash">
 	   {% with messages = get_flashed_messages() %}
       {% if messages %}
         <ul>
@@ -13,22 +13,24 @@
       {% endif %}
     {% endwith %}
   </div>
-  <h3>{{category.name}}</h3>
-  <a href="{{url_for('editCategory', category_id=category.id)}}">edit </a>
-  <a href="{{url_for('deleteCategory', category_id=category.id)}}">delete</a>
+  <h3 class="text-center">{{category.name}}</h3>
   <br /><br />
   <a href="{{url_for('newItem', category_id=category.id)}}">New Item</a>
-
-  {% for item in items %}
-		<div class="row">
-			<div class="col-md-1"></div>
-				<div class="col-md-10">
-					<a href="{{url_for('showDescription', category_id=category.id, item_id=item.id)}}"><h3>{{item.name}}</h3></a>
-          <a href="{{url_for('editItem', category_id=category.id, item_id=item.id)}}">edit</a>
-          <a href="{{url_for('deleteItem', category_id=category.id, item_id=item.id)}}">delete</a>
-				</div>
-			<div class="col-md-1"></div>
-		</div>
-	{% endfor %}
+  <table class="table table-striped">
+    <tbody>
+      {% for item in items %}
+        <tr>
+          <td class="col-md-10 big-link">
+            <a href="{{url_for('showDescription', category_id=category.id, item_id=item.id)}}">{{item.name}}</a>
+          </td>
+          <td class="col-md-2">
+            <a href="{{url_for('editItem', category_id=category.id, item_id=item.id)}}">edit</a>
+            <br />
+            <a href="{{url_for('deleteItem', category_id=category.id, item_id=item.id)}}">delete</a>
+          </td>
+        </tr>
+    	{% endfor %}
+    </tbody>
+  </table>
 </div>
 {% endblock %}

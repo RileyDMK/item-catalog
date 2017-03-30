@@ -1,4 +1,5 @@
-from flask import Flask, render_template, request, redirect, jsonify, url_for, flash
+from flask import Flask, render_template, request, redirect, jsonify, url_for
+from flask import flash
 app = Flask(__name__)
 
 from sqlalchemy import create_engine, asc
@@ -119,7 +120,8 @@ def gconnect():
     output += '!</h1>'
     output += '<img src="'
     output += login_session['picture']
-    output += ' " style = "width: 300px; height: 300px;border-radius: 150px;-webkit-border-radius: 150px;-moz-border-radius: 150px;"> '
+    output += ' " style = "width: 300px; height: 300px;border-radius: 150px;'
+    output += ' -webkit-border-radius: 150px;-moz-border-radius: 150px;"> '
     flash("you are now logged in as %s" % login_session['username'])
     print "done!"
     return output
@@ -136,26 +138,32 @@ def fbconnect():
         'web']['app_id']
     app_secret = json.loads(open('fb_client_secrets.json', 'r').read())[
         'web']['app_secret']
-    url = 'https://graph.facebook.com/oauth/access_token?grant_type=fb_exchange_token&client_id=%s&client_secret=%s&fb_exchange_token=%s' % (
-        app_id, app_secret, access_token)
+    url = ('https://graph.facebook.com/v2.8/oauth/access_token?'
+           'grant_type=fb_exchange_token&client_id=%s&client_secret=%s'
+           '&fb_exchange_token=%s') % (app_id, app_secret, access_token)
+
     h = httplib2.Http()
     result = h.request(url, 'GET')[1]
 
     # Use token to get user info from API
     userinfo_url = "https://graph.facebook.com/v2.2/me"
     # strip expire tag from access token
-    token = result.split("&")[0]
+    data = json.loads(result)
+    token = 'access_token=' + data['access_token']
+    #token = result.split("&")[0]
 
     url = 'https://graph.facebook.com/v2.4/me?%s&fields=name,id,email' % token
+
     h = httplib2.Http()
     result = h.request(url, 'GET')[1]
-    # print "url sent for API access:%s"% url
-    # print "API JSON result: %s"% result
+    print "url sent for API access:%s" % url
+    print "API JSON result: %s" % result
     data = json.loads(result)
+    print data
     login_session['provider'] = 'facebook'
-    login_session['username'] = data["name"]
-    login_session['email'] = data["email"]
-    login_session['facebook_id'] = data["id"]
+    login_session['username'] = data['name']
+    login_session['email'] = data['email']
+    login_session['facebook_id'] = data['id']
 
     stored_token = token.split("=")[1]
     login_session['access_token'] = stored_token
@@ -165,7 +173,7 @@ def fbconnect():
     h = httplib2.Http()
     result = h.request(url, 'GET')[1]
     data = json.loads(result)
-    login_session['picture'] = data["data"]["url"]
+    login_session['picture'] = data['data']['url']
 
     # see if user exists
     user_id = getUserID(login_session['email'])
@@ -179,7 +187,8 @@ def fbconnect():
     output += '!</h1>'
     output += '<img src="'
     output += login_session['picture']
-    output += ' " style="width:300px;height:300px;border-radius:150px;-webkit-border-radius: 150px;-moz-border-radius:150px;"> '
+    output += ' " style="width:300px;height:300px;border-radius:150px;'
+    output += ' -webkit-border-radius: 150px;-moz-border-radius:150px;"> '
     flash("you are now logged in as %s" % login_session['username'])
     return output
 
@@ -271,9 +280,11 @@ def showCategory(category_id):
     items = session.query(Item).filter_by(category_id=category_id).all()
     creator = getUserInfo(category.user_id)
     if 'username' not in login_session or creator.id != login_session['user_id']:
-        return render_template('pubcategory.html', items=items, category=category, creator=creator)
+        return render_template('pubcategory.html', items=items,
+                               category=category, creator=creator)
     else:
-        return render_template('category.html', items=items, category=category, creator=creator)
+        return render_template('category.html', items=items, category=category,
+                               creator=creator)
 
 
 @app.route('/catalog/<int:category_id>/edit/', methods=['GET', 'POST'])
@@ -289,7 +300,7 @@ def editCategory(category_id):
         if request.form['name']:
             editedCategory.name = request.form['name']
             flash('Category Successfully Edited %s' % editedCategory.name)
-            return redirect(url_for('showCategory', category_id=category_id))
+            return redirect(url_for('showCategories'))
     else:
         return render_template('editcategory.html', category=editedCategory)
 
@@ -343,7 +354,8 @@ def newItem(category_id):
         return render_template('newitem.html', category_id=category_id)
 
 
-@app.route('/catalog/<int:category_id>/<int:item_id>/edit/', methods=['GET', 'POST'])
+@app.route('/catalog/<int:category_id>/<int:item_id>/edit/',
+           methods=['GET', 'POST'])
 def editItem(category_id, item_id):
     editedItem = session.query(
         Item).filter_by(id=item_id).one()
@@ -363,7 +375,8 @@ def editItem(category_id, item_id):
         return render_template('edititem.html', category_id=category_id, item=editedItem)
 
 
-@app.route('/catalog/<int:category_id>/<int:item_id>/delete/', methods=['GET', 'POST'])
+@app.route('/catalog/<int:category_id>/<int:item_id>/delete/',
+           methods=['GET', 'POST'])
 def deleteItem(category_id, item_id):
     itemToDelete = session.query(
         Item).filter_by(id=item_id).one()
