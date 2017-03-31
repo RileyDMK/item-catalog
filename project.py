@@ -417,7 +417,6 @@ def getUserID(email):
 
 
 # JSON endpoints
-
 @app.route('/catalog/<int:category_id>/JSON')
 @app.route('/catalog/<int:category_id>/items/JSON')
 def categoryJSON(category_id):
@@ -440,7 +439,7 @@ def catalogJSON():
     categories = session.query(Category).all()
     return jsonify(categories=[c.serialize for c in categories])
 
-
+# App data not sensitive enough to require a secret secret_key
 if __name__ == '__main__':
     app.secret_key = 'super_secret_key'
     app.debug = True
